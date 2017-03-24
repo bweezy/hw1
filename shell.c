@@ -76,6 +76,12 @@ int cmd_cd(struct tokens *temp){
   char *cpt;
 
   getcwd(buf, BUFSIZE);
+
+  if((int)tokens_get_length(temp) < 2){
+    chdir(getenv("HOME"));
+    return 0;
+  }
+
   arg = tokens_get_token(temp, 1);
 
   cpt = buf;
