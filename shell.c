@@ -32,6 +32,7 @@ pid_t shell_pgid;
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
+int cmd_cd(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -46,7 +47,8 @@ typedef struct fun_desc {
 fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
-  {cmd_pwd, "pwd", "display present working directory"}
+  {cmd_pwd, "pwd", "display present working directory"},
+  {cmd_cd, "cd", "change present working directory"}
 };
 
 /* Prints a helpful description for the given command */
@@ -65,6 +67,25 @@ int cmd_pwd(unused struct tokens *tokens) {
   char buf[BUFSIZE];
   getcwd(buf, BUFSIZE);
   printf("%s\n", buf);
+  return 1;
+}
+
+int cmd_cd(struct tokens *temp){
+  char buf[BUFSIZE];
+  char *arg;
+  char *cpt;
+
+  getcwd(buf, BUFSIZE);
+  arg = tokens_get_token(temp, 1);
+
+  cpt = buf;
+  while(*cpt != '\0')
+    cpt++;
+  *cpt = '/';
+  *(cpt+1) = '\0';
+
+  strcat(buf, arg);
+  chdir(buf);
   return 1;
 }
 
