@@ -15,6 +15,8 @@
 /* Convenience macro to silence compiler warnings about unused function parameters. */
 #define unused __attribute__((unused))
 
+#define BUFSIZE 256
+
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
 
@@ -29,6 +31,7 @@ pid_t shell_pgid;
 
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
+int cmd_pwd(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -43,6 +46,7 @@ typedef struct fun_desc {
 fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
+  {cmd_pwd, "pwd", "display present working directory"}
 };
 
 /* Prints a helpful description for the given command */
@@ -55,6 +59,13 @@ int cmd_help(unused struct tokens *tokens) {
 /* Exits this shell */
 int cmd_exit(unused struct tokens *tokens) {
   exit(0);
+}
+
+int cmd_pwd(unused struct tokens *tokens) { 
+  char buf[BUFSIZE];
+  getcwd(buf, BUFSIZE);
+  printf("%s\n", buf);
+  return 1;
 }
 
 /* Looks up the built-in command, if it exists. */
