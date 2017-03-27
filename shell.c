@@ -84,14 +84,32 @@ int cmd_cd(struct tokens *temp){
 
   arg = tokens_get_token(temp, 1);
 
+  
   cpt = buf;
   while(*cpt != '\0')
     cpt++;
   *cpt = '/';
   *(cpt+1) = '\0';
 
-  strcat(buf, arg);
-  chdir(buf);
+  if(!strcmp(arg, "."))
+    return 1;
+  else if(!strcmp(arg, "..")){
+    //printf("cpt = %c\n", *cpt);
+    cpt--;
+    while(*cpt != '/'){
+      //printf("%c\n", *cpt);
+      cpt--;
+
+    }
+    *cpt = '\0';
+  }else{
+    strcat(buf,arg);
+  }
+
+  //printf("buf = %s", buf);
+
+  if(chdir(buf) == -1)
+    fprintf(stdout, "bash: cd: %s: No such file or directory\n", arg);
   return 1;
 }
 
