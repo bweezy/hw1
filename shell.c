@@ -70,21 +70,19 @@ int cmd_pwd(unused struct tokens *tokens) {
   return 1;
 }
 
-int cmd_cd(struct tokens *temp){
+int cmd_cd(struct tokens *tokens){
   char buf[BUFSIZE];
   char *arg;
   char *cpt;
 
   getcwd(buf, BUFSIZE);
 
-  if((int)tokens_get_length(temp) < 2){
+  if((int)tokens_get_length(tokens) < 2){
     chdir(getenv("HOME"));
     return 0;
   }
+  arg = tokens_get_token(tokens, 1);
 
-  arg = tokens_get_token(temp, 1);
-
-  
   cpt = buf;
   while(*cpt != '\0')
     cpt++;
@@ -112,6 +110,31 @@ int cmd_cd(struct tokens *temp){
     fprintf(stdout, "bash: cd: %s: No such file or directory\n", arg);
   return 1;
 }
+
+int shell_exec(struct tokens *tokens){
+
+	int length = tokens_get_length(tokens);
+	char *arg[length];
+	int i;
+
+	for(i = 0; i < length; i++){
+		arg[i] = tokens_get_token(tokens, i);
+	}
+	arg[i] = NULL;
+
+	pid_t pid = fork();
+	if(pid == 0){
+		if(execvp(*arg, arg) == -1)
+			exit(errno);
+	}
+	else{
+		wait(&pid);
+	}
+	return 0;
+}
+
+
+
 
 /* Looks up the built-in command, if it exists. */
 int lookup(char cmd[]) {
@@ -167,8 +190,9 @@ int main(unused int argc, unused char *argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
+    	shell_exec(tokens);
       /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
+      //fprintf(stdout, "This shell doesn't know how to run programs.\n");
     }
 
     if (shell_is_interactive)
