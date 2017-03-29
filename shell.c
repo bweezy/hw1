@@ -113,18 +113,66 @@ int cmd_cd(struct tokens *tokens){
 
 int shell_exec(struct tokens *tokens){
 
-	int length = tokens_get_length(tokens);
-	char *arg[length];
-	int i;
+	int argLen = tokens_get_length(tokens);
+	char *arg[argLen];
+	
+	size_t envLen;
+	size_t pathLen;
+	size_t maxPathLen = 0;
 
-	for(i = 0; i < length; i++){
+	char *shell_path;
+	char *copyenv;
+	char *path;
+	char *absPath;
+
+	int numPaths;
+	int i = 0;
+
+
+	//Get Paths from environment, copy to dynamically allocated memory
+	shell_path = getenv("PATH");
+	envLen = strlen(shell_path)+1;
+	copyenv = memcpy(malloc(envLen), shell_path, envLen);
+	path = strtok(copyenv, ":");
+
+	//Tokenize the paths
+	char **result = malloc(sizeof result[0]);
+	while(1){
+		pathLen = strlen(path) + 1;
+		if(pathLen > maxPathLen)
+			maxPathLen = pathLen;
+		result[i] = strcpy(malloc(pathLen), path);
+		path = strtok(NULL, ":");
+		if(!path)
+			break;
+		i++;
+		result = realloc(result, (i+1)*(sizeof result));
+	}
+	numPaths = i+1;
+
+	//Retrieve command line arguments
+	for(i = 0; i < argLen; i++){
 		arg[i] = tokens_get_token(tokens, i);
 	}
 	arg[i] = NULL;
 
+	//Check for existence of executable in env paths
+		if(access(arg[0], X_OK) == -1){
+		absPath = malloc(sizeof(char)*(maxPathLen + 2 + strlen(arg[0])));
+		for(i = 0; i < numPaths; i++){
+			strcpy(absPath, result[i]);
+			strcat(absPath, "/");
+			strcat(absPath, arg[0]);
+			if(access(absPath, X_OK) != -1)
+				break;
+		}
+		arg[0] = absPath;
+	}
+
+	//fork and execute
 	pid_t pid = fork();
 	if(pid == 0){
-		if(execvp(*arg, arg) == -1)
+		if(execv(*arg, arg) == -1)
 			exit(errno);
 	}
 	else{
